@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>NEON OVERDRIVE - 3D Synthwave Racer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Strictly Centered Mobile View Container (locked ratio on desktop, fullscreen on mobile) -->
+    <div id="mobile-view-wrapper">
+      
+      <!-- Canvas container for Three.js WebGL rendering -->
+      <div id="game-container"></div>
+
+      <!-- HUD Overlay (active during gameplay) -->
+      <div id="hud-overlay" class="ui-panel hidden">
+        <div class="hud-top">
+          <div class="hud-left-group">
+            <button id="hud-pause-btn" class="hud-pause-btn">⏸</button>
+            <div class="hud-stat">
+              <div class="hud-label">SCORE</div>
+              <div id="hud-score" class="hud-value font-tech">000000</div>
+            </div>
+          </div>
+          <div class="hud-stat-center">
+            <div id="magnet-badge" class="badge-magnet hidden font-tech">🧲 MAGNET ACTIVE</div>
+          </div>
+          <div class="hud-stat">
+            <div class="hud-label">MULTIPLIER</div>
+            <div id="hud-multiplier" class="hud-value font-tech glow-cyan">x1.0</div>
+          </div>
+        </div>
+        
+        <div class="hud-bottom">
+          <div class="hud-meters">
+            <!-- Battery/Fuel Bar -->
+            <div class="meter-container">
+              <span class="meter-icon">⚡</span>
+              <div class="meter-bar">
+                <div id="fuel-fill" class="meter-fill fuel-color" style="width: 100%"></div>
+              </div>
+            </div>
+            <!-- Boost Bar -->
+            <div class="meter-container">
+              <span class="meter-icon">🔥</span>
+              <div class="meter-bar">
+                <div id="boost-fill" class="meter-fill boost-color" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Speedometer -->
+          <div class="speedometer">
+            <div id="hud-speed" class="speed-value font-tech">0</div>
+            <div class="speed-unit">MPH</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Menu Overlay -->
+      <div id="menu-overlay" class="ui-panel glass-modal">
+        <h1 class="game-title glow-cyan-text">NEON<br><span class="glow-sand-text">OVERDRIVE</span></h1>
+        <p class="tagline">A 3D SYNTHWAVE ROAD RACER</p>
+        
+        <!-- 3 Cars Selection Grid -->
+        <div class="car-selector-panel">
+          <h3>CHOOSE YOUR VEHICLE</h3>
+          <div class="car-grid">
+            <div class="car-card active" data-car="spectre">
+              <div class="car-card-name font-tech">SPECTRE</div>
+              <div class="car-card-type">SPEEDSTER</div>
+              <div class="car-stats">
+                <div class="stat-bar"><span class="bar-fill" style="width: 90%; background: #3d5a80;"></span></div>
+                <div class="stat-label">SPEED</div>
+              </div>
+            </div>
+            <div class="car-card" data-car="vortex">
+              <div class="car-card-name font-tech">VORTEX</div>
+              <div class="car-card-type">INTERCEPTOR</div>
+              <div class="car-stats">
+                <div class="stat-bar"><span class="bar-fill" style="width: 75%; background: #5b8266;"></span></div>
+                <div class="stat-label">ACCEL</div>
+              </div>
+            </div>
+            <div class="car-card" data-car="apex">
+              <div class="car-card-name font-tech">APEX</div>
+              <div class="car-card-type">DRIFTER</div>
+              <div class="car-stats">
+                <div class="stat-bar"><span class="bar-fill" style="width: 85%; background: #ffd166;"></span></div>
+                <div class="stat-label">STEER</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="high-score-container">
+          <span>GRID CHAMPION SCORE:</span>
+          <span id="best-score" class="font-tech glow-sand-text">000000</span>
+        </div>
+
+        <div class="menu-actions">
+          <button id="start-btn" class="btn btn-primary glow-cyan">ENGINE START</button>
+          <button id="settings-btn" class="btn btn-secondary">SETTINGS</button>
+        </div>
+
+        <div class="instructions-panel">
+          <h3>HOW TO RUN THE GRID</h3>
+          <div class="controls-guide">
+            <div class="guide-item">
+              <strong>Desktop:</strong> Use <span class="key">A</span>/<span class="key">D</span> or <span class="key">←</span>/<span class="key">→</span> to steer. Use <span class="key">W</span>/<span class="key">↑</span> to accelerate, <span class="key">S</span>/<span class="key">↓</span> to brake. Hold <span class="key">SPACE</span> to boost. Or simply click the on-screen buttons!
+            </div>
+            <div class="guide-item">
+              <strong>Mobile Controls:</strong> Hold <span class="hl-cyan">GAS</span> to accelerate, <span class="hl-red">BRAKE</span> to decelerate. Tap <span class="hl-cyan">◀</span> and <span class="hl-cyan">▶</span> to steer. Tap <span class="hl-sand">BOOST</span> for turbo!
+            </div>
+            <div class="guide-item">
+              <strong>Coins:</strong> Collect gold <span class="hl-sand">Coins (+100)</span>, super cyan <span class="hl-cyan">Coins (+300)</span>, and purple <span class="hl-purple">Magnet (🧲)</span> to attract coins!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Overlay -->
+      <div id="settings-overlay" class="ui-panel glass-modal hidden">
+        <h2 class="glow-cyan-text">SETTINGS</h2>
+        <div class="settings-content">
+          <div class="setting-row">
+            <span>GAME SOUND:</span>
+            <button id="mute-toggle" class="btn btn-secondary">SOUND: ON</button>
+          </div>
+          <div class="setting-row">
+            <span>MOBILE STEERING:</span>
+            <button id="steering-toggle" class="btn btn-secondary">STYLE: BUTTONS</button>
+          </div>
+
+          <!-- Dynamic Steering Preview inside Settings -->
+          <div id="settings-steering-preview" class="setting-preview-row">
+            <div id="settings-wheel-preview" class="settings-preview-box hidden">
+              <div id="settings-steering-wheel" class="virtual-wheel">
+                <div class="wheel-spoke center-spoke"></div>
+                <div class="wheel-spoke horizontal-spoke"></div>
+                <div class="wheel-hub"></div>
+              </div>
+              <p class="preview-help">DRAG WHEEL TO TEST</p>
+            </div>
+            <div id="settings-buttons-preview" class="settings-preview-box">
+              <div class="preview-buttons-layout">
+                <button class="touch-btn steer-btn" style="pointer-events: none;">◀</button>
+                <button class="touch-btn steer-btn" style="pointer-events: none;">▶</button>
+              </div>
+              <p class="preview-help">TAP BUTTONS TO STEER</p>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <span>DISPLAY STATE:</span>
+            <span class="hl-cyan">60 FPS OPTIMIZED</span>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button id="settings-resume-btn" class="btn btn-primary glow-cyan hidden">RESUME GAME</button>
+          <button id="settings-back-btn" class="btn btn-secondary">BACK TO MENU</button>
+        </div>
+      </div>
+
+      <!-- Game Over Overlay -->
+      <div id="game-over-overlay" class="ui-panel glass-modal hidden">
+        <h2 id="death-reason" class="glow-cyan-text">CRASHED!</h2>
+        <p class="tagline">YOUR SYSTEM DISINTEGRATED IN THE GRID</p>
+
+        <div class="score-summary">
+          <div class="summary-row">
+            <span>FINAL SCORE:</span>
+            <span id="final-score" class="font-tech glow-cyan-text">000000</span>
+          </div>
+          <div class="summary-row">
+            <span>DISTANCE CLEARED:</span>
+            <span id="final-distance" class="font-tech">0.0 KM</span>
+          </div>
+        </div>
+
+        <button id="restart-btn" class="btn btn-primary glow-cyan">RE-INTEGRATE</button>
+        <button id="game-over-menu-btn" class="btn btn-secondary">MAIN MENU</button>
+      </div>
+
+      <!-- Mobile Touch Controls (always active and visible on both desktop & mobile) -->
+      <div id="mobile-controls">
+        <!-- Left side steering: Buttons or Wheel -->
+        <div class="touch-side-left">
+          <!-- Buttons Layout (Default) -->
+          <div id="mobile-steering-buttons" class="steering-layout">
+            <button id="btn-left" class="touch-btn steer-btn">◀</button>
+            <button id="btn-right" class="touch-btn steer-btn">▶</button>
+          </div>
+          <!-- Virtual Steering Wheel Layout -->
+          <div id="mobile-steering-wheel-container" class="steering-layout hidden">
+            <div id="steering-wheel" class="virtual-wheel">
+              <div class="wheel-spoke center-spoke"></div>
+              <div class="wheel-spoke horizontal-spoke"></div>
+              <div class="wheel-hub"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right side pedals: Brake, Boost, Gas -->
+        <div class="touch-side-right">
+          <button id="btn-brake" class="touch-btn pedal-btn brake-pedal">BRAKE</button>
+          <button id="btn-boost" class="touch-btn pedal-btn boost-pedal">BOOST</button>
+          <button id="btn-gas" class="touch-btn pedal-btn gas-pedal">GAS</button>
+        </div>
+      </div>
+
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
