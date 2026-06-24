@@ -163,11 +163,16 @@ export class Controller {
 
     let isDragging = false;
     let center = { x: 0, y: 0 };
+    let activeTouchId = null;
 
     const handleStart = (e) => {
       if (isGameplayWheel && this.steeringStyle !== 'wheel') return;
 
-      const touch = e.touches ? e.touches[0] : e;
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
+      if (e.changedTouches) {
+        activeTouchId = touch.identifier;
+      }
+
       const rect = wheelEl.getBoundingClientRect();
       center = {
         x: rect.left + rect.width / 2,
@@ -185,7 +190,22 @@ export class Controller {
       if (!isDragging) return;
       if (isGameplayWheel && this.steeringStyle !== 'wheel') return;
 
-      const touch = e.touches ? e.touches[0] : e;
+      let touch = null;
+      if (e.touches && activeTouchId !== null) {
+        // Find the specific touch matching our active identifier
+        for (let i = 0; i < e.touches.length; i++) {
+          if (e.touches[i].identifier === activeTouchId) {
+            touch = e.touches[i];
+            break;
+          }
+        }
+      } else {
+        touch = e;
+      }
+
+      // If the tracked touch is no longer active, skip
+      if (!touch) return;
+
       const dx = touch.clientX - center.x;
       const dy = touch.clientY - center.y;
       const angleRad = Math.atan2(dy, dx);
@@ -212,8 +232,21 @@ export class Controller {
       if (e.cancelable) e.preventDefault();
     };
 
-    const handleEnd = () => {
+    const handleEnd = (e) => {
+      if (e.changedTouches && activeTouchId !== null) {
+        // Only release if the touch that ended was the one tracking the wheel
+        let releasedTrackedTouch = false;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === activeTouchId) {
+            releasedTrackedTouch = true;
+            break;
+          }
+        }
+        if (!releasedTrackedTouch) return;
+      }
+
       isDragging = false;
+      activeTouchId = null;
       if (isGameplayWheel) {
         this.isDraggingWheel = false;
       } else {
