@@ -456,8 +456,8 @@ body, html {
   justify-content: space-between;
   align-items: flex-end;
   width: 100%;
-  /* Shift upward to leave room for mobile controls */
-  margin-bottom: 105px; 
+  /* Shift upward to leave room for mobile controls and safe-area margins */
+  margin-bottom: calc(125px + env(safe-area-inset-bottom)); 
 }
 
 .hud-meters {
@@ -535,10 +535,10 @@ body, html {
 /* Mobile Controls Overlay - ALWAYS VISIBLE */
 #mobile-controls {
   position: absolute;
-  bottom: 0;
+  bottom: calc(24px + env(safe-area-inset-bottom)); /* Lifted to clear browser navigation bars, home indicators, and notches */
   left: 0;
   width: 100%;
-  padding: 16px 12px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
